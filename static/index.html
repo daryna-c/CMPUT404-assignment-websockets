@@ -19,6 +19,10 @@
         WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
         See the License for the specific language governing permissions and
         limitations under the License.
+
+        References:
+        https://github.com/abramhindle/WebSocketsExamples/blob/547b31b1a6873dd67dc5a4a44cbed0a2003d7811/static/chat.html
+            under the Apache License, Version 2.0, Copyright 2013 Abram Hindle
     "/>
     <script src="json2.js"></script>
   </head> 
@@ -125,6 +129,13 @@ function addEntity(entity, data) {
     world[entity] = data;
     drawNextFrame(); // (but should we?)
     //XXX: Send a XHTML Request that updates the entity you just modified!
+    fetch("../entity/"+ entity, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
 }
 var counter = 0;
 function addEntityWithoutName(data) {
@@ -245,6 +256,7 @@ mouse.mousedraggers.push(function(x,y,clicked,e) {
 
 
 function update() {
+    drawNextFrame();
     drawFrame();
 }
 
@@ -261,7 +273,9 @@ function wsSetup() {
     socket.onmessage = function(msg) {  
         try {
             debug("WebSocket Recv:" + msg.data);
-            //XXX: TODO What are you going to do here?            
+            //XXX: TODO What are you going to do here?   
+            world = JSON.parse(msg.data)
+            update();  
         } catch (e) {
             alert("socket on message: " + e);
         }
