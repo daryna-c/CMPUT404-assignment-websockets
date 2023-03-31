@@ -21,12 +21,63 @@
         limitations under the License.
 
         References:
-        https://github.com/abramhindle/WebSocketsExamples/blob/547b31b1a6873dd67dc5a4a44cbed0a2003d7811/static/chat.html
+            https://github.com/abramhindle/WebSocketsExamples/blob/547b31b1a6873dd67dc5a4a44cbed0a2003d7811/static/chat.html
             under the Apache License, Version 2.0, Copyright 2013 Abram Hindle
+
+            YouTube Video
+            Title: AJAX with XHTMLHttpRequest
+            https://youtu.be/mLL5pdIbqWc
+            Author: Steve Griffith - Prof3ssorSt3v3
+
+            Author: ReqBin
+            https://reqbin.com/code/javascript/wzp2hxwh/javascript-post-request-example
+
+            https://www.w3docs.com/snippets/javascript/how-to-get-all-property-values-of-a-javascript-object.html
+
+            Stackoverflow Answer
+            Title: How to add image to canvas
+            https://stackoverflow.com/a/61133135
+            Author: Anthony Gedeon
+            https://stackoverflow.com/users/10930155/anthony-gedeon
+
+            https://www.w3schools.com/graphics/canvas_images.asp
+
+            Stackoverflow Answer
+            Title: Scaling an image to fit on canvas
+            https://stackoverflow.com/a/69391489
+            Author: Wilson
+            https://stackoverflow.com/users/13721819/wilson
+
+            Title: HTML Button onclick – JavaScript Click Event Tutorial
+            https://www.freecodecamp.org/news/html-button-onclick-javascript-click-event-tutorial/
+            Author: Kolade Chris 
+
+            https://www.w3schools.com/csS/css3_buttons.asp
+
+            https://www.html5canvastutorials.com/tutorials/html5-canvas-circles/
+								  
+            Stackoverflow Answer
+            Title: Why doesn't image show on load, but shows on refresh?
+            https://stackoverflow.com/a/7029564
+            Author: pimvdb
+            https://stackoverflow.com/users/514749/pimvdb
     "/>
     <script src="json2.js"></script>
   </head> 
   <body bgcolor="white" height="100%" width="100%"> 
+    <div class="flex">
+        <div height="10%" width="100%">
+            <button id="alternateColour" class="coloured" style="background-color: grey;" onclick="toggleAlternate()">Alternate</button>
+            <button id="red" class="coloured" style="background-color: white;" onclick="changeColour(0)">Red</button>
+            <button id="yellow" class="coloured" style="background-color: white;" onclick="changeColour(1)">Yellow</button>
+            <button id="green" class="coloured" style="background-color: white;" onclick="changeColour(2)">Green</button>
+            <button id="cyan" class="coloured" style="background-color: white;" onclick="changeColour(3)">Cyan</button>
+            <button id="blue" class="coloured" style="background-color: white;" onclick="changeColour(4)">Blue</button>
+            <button id="purple" class="coloured" style="background-color: white;" onclick="changeColour(5)">Purple</button>
+            <button style="background-color: white;" onclick="clearCanvasRequest()">Clear Canvas</button>
+        </div>
+        <div>
+        <img id="bgImg" src="background.png" height="100%" width="100%" hidden>
     <div id="debug"></div>
     <canvas id="c" width="100%" height="100%" style="-webkit-tap-highlight-color: transparent;"></canvas> 
 
@@ -39,14 +90,58 @@ var W = canvas.width  = window.innerWidth-6;
 var H = canvas.height = window.innerHeight-50;
 var wscounter = 0;
 var socket;
+var backgroundImg = new Image();
+backgroundImg.src = "background.png";
+backgroundImg.onload = function () {
+    context.drawImage(backgroundImg,  0, 0, H / ratio, H);}
+var ratio = backgroundImg.width / backgroundImg.height;
+var baseColours = ["red", "yellow", "green", "cyan", "blue", "purple"];
+var currentColourIndex = 5;
+var alternate = true;
 
 function debug(str) {
-    var debugDiv = document.getElementById('debug');
-    debugDiv.innerHTML = "" + str;
+    //var debugDiv = document.getElementById('debug');
+    //debugDiv.innerHTML = "" + str;
 }
 debug("Test");
 
 world = {};
+
+function toggleAlternate() {
+    for (button of document.getElementsByClassName("coloured")) {
+        button.style.backgroundColor = "white";
+    }
+    if (alternate) {
+        alternate = false;
+        let specificButton = document.getElementById(baseColours[currentColourIndex]);
+        specificButton.style.backgroundColor = baseColours[currentColourIndex];
+    } else {
+        alternate = true;
+        let specificButton = document.getElementById("alternateColour");
+        specificButton.style.backgroundColor = "grey"
+    }
+}
+
+function changeColour(index) {
+    alternate = false;
+    currentColourIndex = index;
+    for (button of document.getElementsByClassName("coloured")) {
+        button.style.backgroundColor = "white";
+    }
+    let specificButton = document.getElementById(baseColours[currentColourIndex]);
+    specificButton.style.backgroundColor = baseColours[currentColourIndex];
+}
+
+function clearCanvasRequest() {
+    var request = new Request("../clear");
+    fetch(request, { method: 'GET' }).then((response) => {
+        if (response.status === 200) { // OK
+            return;
+        } else {
+            alert("Something went wrong: " + response.status);
+        }
+    })
+}
 
 //XXX: TODO Make this prettier!
 function drawCircle(context,entity) {
@@ -58,7 +153,8 @@ function drawCircle(context,entity) {
         //moveTo(x,y);
         fillStyle = entity["colour"];
         strokeStyle = fillStyle;
-        arc(x, y, (entity["radius"])?entity["radius"]:50, 0, 2.0 * Math.PI, false);  
+        arc(x, y, (entity["radius"])?entity["radius"]:3, 0, 2.0 * Math.PI, false);  
+        fill();
         stroke();                                
     }
 }
@@ -68,7 +164,7 @@ function prepEntity(entity) {
         entity["colour"] = "#FF0000";
     }
     if (!entity["radius"]) {
-        entity["radius"] = 50;
+        entity["radius"] = 3;
     }
     return entity;
 }
@@ -78,8 +174,8 @@ function clearFrame() {
 	moveTo(0,0);
 	fillStyle = "#000";
 	fillRect(0,0,W,H);
+    drawImage(backgroundImg,  0, 0, H / ratio, H);
     }
-
 }
 
 // This actually draws the frame
@@ -139,7 +235,7 @@ function addEntity(entity, data) {
 }
 var counter = 0;
 function addEntityWithoutName(data) {
-    var name = "X"+(counter++)%100;
+    var name = "X"+(counter++);
     addEntity(name,data);
 }
 
@@ -242,16 +338,20 @@ mouse = (function() {
 // Add the application specific mouse listeners!
 //XXX: TODO Make these prettier!
 mouse.mousedowners.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'blue'});
+    if (alternate) {
+        currentColourIndex = (currentColourIndex + 1) % 6;}
+    addEntityWithoutName({'x':x,'y':y,'colour': baseColours[currentColourIndex],
+                          'radius':3});
 });
 
 mouse.mouseuppers.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'red'});
+    addEntityWithoutName({'x':x,'y':y,'colour': baseColours[currentColourIndex],
+                          'radius':3});
 });
 
 mouse.mousedraggers.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'green',
-                          'radius':10});
+    addEntityWithoutName({'x':x,'y':y,'colour': baseColours[currentColourIndex],
+                          'radius':3});
 });
 
 

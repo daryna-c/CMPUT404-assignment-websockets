@@ -63,6 +63,11 @@ class World:
 
     def clear(self):
         self.space = dict()
+        try:
+            for listener in self.listeners:
+                listener(None, None)
+        except:
+            "no listeners yet"
 
     def get(self, entity):
         return self.space.get(entity,dict())
@@ -96,7 +101,6 @@ def read_ws(ws,client):
             #print("WS RECV: %s" % msg)
             if (msg is not None):
                 packet = json.loads(msg)
-                print(packet)
                 for entity in packet.keys():
                     values = packet[entity].keys()
                     myWorld.set(entity, packet[entity])
@@ -108,7 +112,6 @@ def read_ws(ws,client):
                         myWorld.update(entity, "colour", packet[entity]["colour"])
                     if "radius" in values:
                         myWorld.update(entity, "radius", packet[entity]["radius"])'''
-                print(len(myWorld.space.keys()))
             else:
                 break
     except:
